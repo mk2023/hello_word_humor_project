@@ -18,7 +18,7 @@ async function CaptionExamplesData() {
     <ul
     style={{display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem", listStyle: "none", padding: 0, margin: "2rem 0", alignItems: "start"}}>
         {captions.map((row)=>{
-            const url = row.images?.url;
+            const url = row.images?.[0]?.url;
             if(url){
                 return(
                     <li key = {row.id}
