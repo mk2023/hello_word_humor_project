@@ -4,7 +4,10 @@ import { Suspense } from "react";
 
 async function CaptionExamplesData() {
   const supabase = await createSupabaseClient();
-  const { data: captions, error: captionsError } = await supabase.from("captions").select('id, content, image:images(url)').order("created_datetime_utc", {ascending: false});
+  const { data: captions, error: captionsError } = await supabase
+    .from("captions")
+    .select("id, content, image:images(url)")
+    .order("created_datetime_utc", { ascending: false });
 
   if (captionsError) {
     return <p>Caption Loading Error: {captionsError.message}</p>;
@@ -13,22 +16,21 @@ async function CaptionExamplesData() {
   if(!captions?.length){
     return <p>No captions are found.</p>
   }
-
-  const rows = (captions??[]).filter((row)=>{
-    const rel = row.image;
-    if(Array.isArray(rel)) return Boolean(rel[0]?.url);
-    return Boolean(rel?.url);
-  });
+  const rows = (captions ?? []).filter((row: any) => Boolean(row.image?.url));
 
   return (
     <ul
     style={{display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem", listStyle: "none", padding: 0, margin: "2rem 0", alignItems: "start"}}>
         {rows.map((row)=>{
+                const url = row.image?.url;
+                if (!url) return null;
                 return(
+
+
                     <li key = {row.id}
                         style={{background: "#f2f2f2", borderRadius: 16, padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem", aspectRatio: "1/1"}}>
                        <div style = {{flex: 1, width: "100%", borderRadius: 12, overflow: "hidden"}}>
-                          <Image src = {row.image.url}
+                          <Image src = {url}
                           alt = {row.content}
                           width={600}
                           height={600}
