@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 async function CaptionExamplesData() {
   const supabase = await createSupabaseClient();
-  const { data: captions, error: captionsError } = await supabase.from("captions").select('id, content, created_datetime_utc, image_id, images(id, url)').order("created_datetime_utc", {ascending: false});
+  const { data: captions, error: captionsError } = await supabase.from("captions").select('id, content, image_id,  image:images!captions_image_id_fkey(url)').order("created_datetime_utc", {ascending: false});
 
   if (captionsError) {
     return <p>Caption Loading Error: {captionsError.message}</p>;
@@ -18,7 +18,8 @@ async function CaptionExamplesData() {
     <ul
     style={{display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem", listStyle: "none", padding: 0, margin: "2rem 0", alignItems: "start"}}>
         {captions.map((row)=>{
-            const url = row.images?.[0]?.url;
+
+            const url = row.image?.url;
             if(url){
                 return(
                     <li key = {row.id}
