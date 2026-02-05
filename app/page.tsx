@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 async function CaptionExamplesData() {
   const supabase = await createSupabaseClient();
-  const { data: captions, error: captionsError } = await supabase.from("captions").select('id, content, image_id,  image:images!captions_image_id_fkey(url)').order("created_datetime_utc", {ascending: false});
+  const { data: captions, error: captionsError } = await supabase.from("captions").select('id, content, image_id, images(url)').order("created_datetime_utc", {ascending: false});
 
   if (captionsError) {
     return <p>Caption Loading Error: {captionsError.message}</p>;
@@ -14,18 +14,21 @@ async function CaptionExamplesData() {
     return <p>No captions are found.</p>
   }
 
+  const rows = (captions??[]).filter((row)=>{
+    const rel = row.images;
+    if(Array.isArray(rel)) return Boolen(rel[0]?.url);
+    return Boolean(rel?.url);
+  });
+
   return (
     <ul
     style={{display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem", listStyle: "none", padding: 0, margin: "2rem 0", alignItems: "start"}}>
-        {captions.map((row)=>{
-
-            const url = (Array.isArray(row.image) ? row.image[0]?.url : row.image?.url) as string | undefined;
-            if(url){
+        {rows.map((row)=>{
                 return(
                     <li key = {row.id}
                         style={{background: "#f2f2f2", borderRadius: 16, padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem", aspectRatio: "1/1"}}>
                        <div style = {{flex: 1, width: "100%", borderRadius: 12, overflow: "hidden"}}>
-                          <Image src = {url}
+                          <Image src = {row.images.url}
                           alt = {row.content}
                           width={600}
                           height={600}
@@ -38,7 +41,6 @@ async function CaptionExamplesData() {
                        </div>
                     </li>
                 );
-            }
         })}
     </ul>
   );
