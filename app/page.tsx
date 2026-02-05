@@ -4,26 +4,49 @@ import { Suspense } from "react";
 
 async function CaptionExamplesData() {
   const supabase = await createSupabaseClient();
-  const { data: caption_examples, error } = await supabase.from("caption_examples").select().order("created_datetime_utc", {ascending: false});
+  const { data: captions, error: captionsError } = await supabase.from("captions").select('id, content, created_datetime_utc, image_id, images(id, url)').order("created_datetime_utc", {ascending: false});
 
-  if (error){
-    return <p> Caption Loading Error </p>;
+  if (captionsError) {
+    return <p>Caption Loading Error: {captionsError.message}</p>;
   }
+
+  if(!captions?.length){
+    return <p>No captions are found.</p>
+  }
+
   return (
-    <ul>
-        {caption_examples.map((row)=>(
-            <li key = {row.id} style = {{marginBottom: "0.75rem", marginLeft: "0.85rem"}}>
-                {row.caption}
-            </li>
-        ))}
+    <ul
+    style={{display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem", listStyle: "none", padding: 0, margin: "2rem 0", alignItems: "start"}}>
+        {captions.map((row)=>{
+            const url = row.images?.url;
+            if(url){
+                return(
+                    <li key = {row.id}
+                        style={{background: "#f2f2f2", borderRadius: 16, padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem", aspectRatio: "1/1"}}>
+                       <div style = {{flex: 1, width: "100%", borderRadius: 12, overflow: "hidden"}}>
+                          <Image src = {url}
+                          alt = {row.content}
+                          width={600}
+                          height={600}
+                          style = {{width: "100%", height: "auto", objectFit: "cover"}}
+                          />
+                       </div>
+                       <br/>
+                       <div style={{textAlign: "center", fontSize:"0.95rem", color: "#59656b", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical"}}>
+                            {row.content}
+                       </div>
+                    </li>
+                );
+            }
+        })}
     </ul>
   );
 }
 
 export default function Home() {
   return (
-    <main>
-        <h1 style = {{fontSize: "3rem"}}>Hello!</h1>
+    <main style={{ padding: "2.5rem clamp(1.5rem, 5vw, 4rem)" }}>
+        <h1 style = {{fontSize: "5rem", }}>Hello World!</h1>
          <h1 style = {{fontSize: "3rem"}}>Printing all the caption examples ordered by the date they were made! (newest to oldest) </h1>
          <Suspense fallback={<div>Loading caption_examples...</div>}>
            <CaptionExamplesData />
