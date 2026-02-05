@@ -16,7 +16,7 @@ async function CaptionExamplesData() {
 
   const rows = (captions??[]).filter((row)=>{
     const rel = row.images;
-    if(Array.isArray(rel)) return Boolen(rel[0]?.url);
+    if(Array.isArray(rel)) return Boolean(rel[0]?.url);
     return Boolean(rel?.url);
   });
 
