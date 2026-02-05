@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 async function CaptionExamplesData() {
   const supabase = await createSupabaseClient();
-  const { data: captions, error: captionsError } = await supabase.from("captions").select('id, content, image_id, images(url)').order("created_datetime_utc", {ascending: false});
+  const { data: captions, error: captionsError } = await supabase.from("captions").select('id, content, image:images(url)').order("created_datetime_utc", {ascending: false});
 
   if (captionsError) {
     return <p>Caption Loading Error: {captionsError.message}</p>;
@@ -15,7 +15,7 @@ async function CaptionExamplesData() {
   }
 
   const rows = (captions??[]).filter((row)=>{
-    const rel = row.images;
+    const rel = row.image;
     if(Array.isArray(rel)) return Boolean(rel[0]?.url);
     return Boolean(rel?.url);
   });
@@ -28,7 +28,7 @@ async function CaptionExamplesData() {
                     <li key = {row.id}
                         style={{background: "#f2f2f2", borderRadius: 16, padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem", aspectRatio: "1/1"}}>
                        <div style = {{flex: 1, width: "100%", borderRadius: 12, overflow: "hidden"}}>
-                          <Image src = {row.images.url}
+                          <Image src = {row.image.url}
                           alt = {row.content}
                           width={600}
                           height={600}
