@@ -3,18 +3,44 @@ import { createSupabaseClient } from "@/lib/supabase/supabaseServer";
 import CaptionVoteButtons from "@/app/components/CaptionVoteButtons";
 
 export default async function CaptionImagesData() {
-  const supabase = createSupabaseClient();
-  const { data: captions, error: captionsError } = await supabase
+  const supabase = await createSupabaseClient();
+
+  // Get current logged-in user (server-side)
+  const { data: userRes, error: userErr } = await supabase.auth.getUser();
+  if (userErr) return <p>User lookup error: {userErr.message}</p>;
+
+  const user = userRes.user;
+  if (!user) return <p>You must be logged in.</p>;
+
+  //only get the captions this user has alr voted on:
+  const { data: voted_alr, error: votesError } = await supabase
+      .from("caption_votes")
+      .select("caption_id")
+      .eq("profile_id", user.id);
+
+  if(votesError){
+    return <p>Vote lookup error: {votesError.message}</p>;
+  }
+
+  const votedCaptionIds = voted_alr?.map((v: any) => v.caption_id).filter(Boolean) ?? [];
+
+  //fetch captions that were not voted previously
+  let query = supabase
     .from("captions")
     .select("id, content, image_id, image:images(url)")
-    .order("created_datetime_utc", { ascending: false });
+    .order("created_datetime_utc", {ascending: false});
 
+  if(votedCaptionIds.length>0){
+    const inList = `(${votedCaptionIds.map((id: string) => `"${id}"`).join(",")})`;
+    query = query.not("id", "in", inList);
+  }
+  const { data: captions, error: captionsError } = await query;
   if (captionsError) {
     return <p>Caption Loading Error: {captionsError.message}</p>;
   }
 
-  if(!captions?.length){
-    return <p>No captions are found.</p>
+  if (!captions?.length) {
+    return <p>No captions left to vote on 🎉</p>;
   }
 
   return (
