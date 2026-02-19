@@ -9,7 +9,7 @@ export default function ProtectedPage() {
       <LoggedInUserBox />
 
       <h1 style={{ fontSize: "3.5rem", fontWeight: 800 }}>
-        Possible Memes
+        Memes!
       </h1>
 
       <Suspense fallback={<div>Loading memes...</div>}>

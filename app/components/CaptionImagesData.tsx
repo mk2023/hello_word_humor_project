@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { createSupabaseClient } from "@/lib/supabase/supabaseServer";
+import CaptionVoteButtons from "@/app/components/CaptionVoteButtons";
 
 export default async function CaptionImagesData() {
   const supabase = createSupabaseClient();
@@ -48,6 +49,7 @@ export default async function CaptionImagesData() {
                        <div style={{textAlign: "center", marginTop: "-0.4rem", paddingBottom: "0.25rem", fontSize:"15px", color: "#59656b", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical"}}>
                             {row.content}
                        </div>
+                       <CaptionVoteButtons captionId={row.id} />
                     </li>
                 );
         })}
