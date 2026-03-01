@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const res = NextResponse.next();
 
   const supabase = createServerClient(
@@ -25,7 +25,6 @@ export async function middleware(req: NextRequest) {
   if (!data?.user) {
     const url = req.nextUrl.clone();
     url.pathname = "/";
-    // optional: so user can come back after login
     url.searchParams.set("next", req.nextUrl.pathname + req.nextUrl.search);
     return NextResponse.redirect(url);
   }
