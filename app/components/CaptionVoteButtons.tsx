@@ -5,16 +5,17 @@ import { createClient } from "@/lib/supabase/browser";
 
 type Props = {
   captionId: string;
+  onVoted?: () => void;
+  disabled?: boolean;
 };
 
-export default function CaptionVoteButtons({ captionId }: Props) {
+export default function CaptionVoteButtons({ captionId, onVoted }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [userVote, setUserVote] = useState<number | null>(null);
 
   const vote = async (voteValue: number) => {
     try {
       setSubmitting(true);
-
       const supabase = createClient();
 
       // Check logged-in user onoe more time
@@ -48,7 +49,7 @@ export default function CaptionVoteButtons({ captionId }: Props) {
 
       // Highlight vote button in this session
       setUserVote(voteValue);
-
+      onVoted?.();
     } catch (err: any) {
       alert(err?.message ?? "Vote failed.");
     } finally {

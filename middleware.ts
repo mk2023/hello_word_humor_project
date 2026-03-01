@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
 
   const supabase = createServerClient(
@@ -20,18 +20,19 @@ export async function proxy(req: NextRequest) {
     }
   );
 
-  const { data, error } = await supabase.auth.getUser();
-  console.log("PROXY PATH:", req.nextUrl.pathname);
-  console.log("PROXY USER:", data?.user?.email, error);
+  const { data } = await supabase.auth.getUser();
 
   if (!data?.user) {
     const url = req.nextUrl.clone();
     url.pathname = "/";
+    // optional: so user can come back after login
+    url.searchParams.set("next", req.nextUrl.pathname + req.nextUrl.search);
     return NextResponse.redirect(url);
   }
+
   return res;
 }
 
 export const config = {
-  matcher: ["/protected/:path*"],
+  matcher: ["/protected", "/protected/:path*"],
 };
