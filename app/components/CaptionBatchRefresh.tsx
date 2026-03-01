@@ -23,7 +23,7 @@ export default function CaptionBatchClient({ captions }: { captions: CaptionRow[
     setVotedIds(new Set());
   }, [captions]);
 
-  // When votedIds==totalInBatch, refresh safely (AFTER render)
+  // When votedIds==totalInBatch, refresh safely
   useEffect(() => {
     if (totalInBatch > 0 && votedIds.size >= totalInBatch) {
       const t = setTimeout(() => {
@@ -53,7 +53,9 @@ export default function CaptionBatchClient({ captions }: { captions: CaptionRow[
         gap: "1.5rem",
         listStyle: "none",
         padding: 0,
-        margin: "0 0 2rem 0",
+        margin: "0 auto 2rem auto",
+        maxWidth: "1100px",
+        width: "100%",
         alignItems: "start",
       }}
     >

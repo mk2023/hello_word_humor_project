@@ -1,62 +1,42 @@
-import Image from "next/image";
-import Link from "next/link";
 import { createSupabaseClient } from "@/lib/supabase/supabaseServer";
 import CaptionBatchClient from "@/app/components/CaptionBatchRefresh";
-const PAGE_SIZE = 3;
 
-export default async function CaptionImagesData(props: { page?: number }) {
- const supabase = await createSupabaseClient();
+const BATCH_SIZE = 3;
+const PREFETCH = 60; // fetch extra so filtering still leaves enough
 
-  // get current logged-in user (server-side)
+export default async function CaptionImagesData() {
+  const supabase = await createSupabaseClient();
+
   const { data: userRes, error: userErr } = await supabase.auth.getUser();
   if (userErr) return <p>User lookup error: {userErr.message}</p>;
 
   const user = userRes.user;
   if (!user) return <p>You must be logged in.</p>;
 
-  // get caption IDs this user has already voted on
-  const { data: voted_alr, error: votesError } = await supabase
+  // read votes for this user
+  const { data: votes, error: votesErr } = await supabase
     .from("caption_votes")
     .select("caption_id")
     .eq("profile_id", user.id);
 
-  if (votesError) {
-    return <p>Vote lookup error: {votesError.message}</p>;
-  }
+  if (votesErr) return <p>Vote lookup error: {votesErr.message}</p>;
 
-  const votedCaptionIds =
-    voted_alr?.map((v: any) => v.caption_id).filter(Boolean) ?? [];
+  const votedSet = new Set((votes ?? []).map((v: any) => v.caption_id).filter(Boolean));
 
-  // get captions excluding voted ones
-  let query = supabase
+  // fetch captions
+  const { data: captionsRaw, error: captionsErr } = await supabase
     .from("captions")
-    .select("id, content, image_id, image:images(url)", { count: "exact" })
-    .order("created_datetime_utc", { ascending: false });
+    .select("id, content, image:images(url)")
+    .order("created_datetime_utc", { ascending: false })
+    .limit(PREFETCH);
 
-  if (votedCaptionIds.length > 0) {
-    const inList = `(${votedCaptionIds
-      .map((id: string) => `"${id}"`)
-      .join(",")})`;
-    query = query.not("id", "in", inList);
-  }
+  if (captionsErr) return <p>Caption Loading Error: {captionsErr.message}</p>;
 
-  const { data: captions, error: captionsError, count } = await query.limit(PAGE_SIZE);
+ //get captions we have not previously voted on
+  const remaining = (captionsRaw ?? []).filter((c: any) => !votedSet.has(c.id));
+  const batch = remaining.slice(0, BATCH_SIZE);
 
-  if (captionsError) {
-    return <p>Caption Loading Error: {captionsError.message}</p>;
-  }
+  if (batch.length === 0) return <p>No captions left to vote on 🎉</p>;
 
-  if (!captions?.length) {
-    return <p>No captions left to vote on!</p>;
-  }
-
-  return (
-    <div style={{ width: "min(1100px, 100%)", margin: "0 auto" }}>
-      <div style={{ fontWeight: 900, margin: "1rem 0" }}>
-         Vote on all 3 to load the next set!
-      </div>
-
-      <CaptionBatchClient captions={captions as any} />
-    </div>
-  );
+  return <CaptionBatchClient captions={batch} />;
 }
