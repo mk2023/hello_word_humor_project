@@ -96,7 +96,7 @@ export default function CaptionBatchClient({ captions }: { captions: CaptionRow[
             >
               <Image
                 src={url}
-                alt={row.content}
+                alt={row.content ?? "Caption image"}
                 fill
                 sizes="(max-width: 768px) 100vw, 350px"
                 style={{ objectFit: "cover" }}
