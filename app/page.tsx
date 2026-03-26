@@ -1,6 +1,3 @@
-import Image from "next/image";
-import { createSupabaseClient } from "@/lib/supabase/supabaseServer";
-import { Suspense } from "react";
 import GoogleLoginButton from "@/app/components/GoogleLogin";
 
 export const dynamic = "force-dynamic";

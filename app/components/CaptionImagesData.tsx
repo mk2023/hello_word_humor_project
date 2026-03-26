@@ -21,7 +21,11 @@ export default async function CaptionImagesData() {
 
   if (votesErr) return <p>Vote lookup error: {votesErr.message}</p>;
 
-  const votedSet = new Set((votes ?? []).map((v: any) => v.caption_id).filter(Boolean));
+  const votedSet = new Set(
+    (votes ?? [])
+      .map((v) => (v as { caption_id?: string | null }).caption_id)
+      .filter((captionId): captionId is string => Boolean(captionId))
+  );
 
   // fetch captions
   const { data: captionsRaw, error: captionsErr } = await supabase
@@ -33,10 +37,13 @@ export default async function CaptionImagesData() {
   if (captionsErr) return <p>Caption Loading Error: {captionsErr.message}</p>;
 
  //get captions we have not previously voted on
-  const remaining = (captionsRaw ?? []).filter((c: any) => !votedSet.has(c.id));
+  const remaining = (captionsRaw ?? []).filter((c) => {
+    const captionId = (c as { id?: string }).id;
+    if (!captionId) return false;
+    return !votedSet.has(captionId);
+  });
   const batch = remaining.slice(0, BATCH_SIZE);
 
   if (batch.length === 0) return <p>No captions left to vote on 🎉</p>;
-
   return <CaptionBatchClient captions={batch} />;
 }

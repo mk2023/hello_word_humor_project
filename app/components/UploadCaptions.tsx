@@ -166,9 +166,11 @@ export default function UploadCaptions() {
       setCaptions(arr);
 
       setStep("done");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : typeof err === "string" ? err : "Pipeline failed.";
       setStep("error");
-      setErrorText(err?.message ?? "Pipeline failed.");
+      setErrorText(msg);
     } finally {
       setBusy(false);
     }

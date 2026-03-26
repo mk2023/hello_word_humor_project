@@ -1,7 +1,9 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import LoggedInUserBox from "@/app/components/LoggedInUserBox";
 import CaptionImagesData from "@/app/components/CaptionImagesData";
 import UploadCaptions from "@/app/components/UploadCaptions";
+import { createSupabaseClient } from "@/lib/supabase/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +19,11 @@ export default async function ProtectedPage({
   const sp = await searchParams;
 
   const mode = sp.mode === "upload" ? "upload" : "vote";
+
+  // Auth-gate: avoid rendering the protected UI for logged-out users.
+  const supabase = await createSupabaseClient();
+  const { data: userRes, error } = await supabase.auth.getUser();
+  if (error || !userRes?.user) redirect("/");
 
   return (
     <main style={{ padding: "2.5rem clamp(1.5rem, 5vw, 4rem)" }}>

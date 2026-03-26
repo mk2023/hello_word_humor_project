@@ -35,6 +35,8 @@ export default function CaptionVoteButtons({ captionId, onVoted, disabled }: Pro
         caption_id: captionId,
         profile_id: user.id,
         vote_value: voteValue,
+        created_by_user_id: user.id,
+        modified_by_user_id: user.id,
         created_datetime_utc: now,
         modified_datetime_utc: now,
       });
@@ -50,8 +52,9 @@ export default function CaptionVoteButtons({ captionId, onVoted, disabled }: Pro
       }
       setVotedValue(voteValue);
       onVoted?.();
-    } catch (e: any) {
-      alert(e?.message ?? "Vote failed.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Vote failed.";
+      alert(msg);
     } finally {
       setSubmitting(null);
     }

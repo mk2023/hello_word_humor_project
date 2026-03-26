@@ -7,8 +7,8 @@ import CaptionVoteButtons from "@/app/components/CaptionVoteButtons";
 
 type CaptionRow = {
   id: string;
-  content: string;
-  image: any;
+  content: string | null;
+  image: { url: string } | Array<{ url: string }> | null;
 };
 
 export default function CaptionBatchClient({ captions }: { captions: CaptionRow[] }) {
@@ -18,21 +18,26 @@ export default function CaptionBatchClient({ captions }: { captions: CaptionRow[
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
   const totalInBatch = captions.length;
 
-  // Reset vote tracking when there is a new batch
-  useEffect(() => {
-    setVotedIds(new Set());
-  }, [captions]);
+  const captionIdsInBatch = useMemo(
+    () => new Set(captions.map((c) => c.id)),
+    [captions]
+  );
 
-  // When votedIds==totalInBatch, refresh safely
-  useEffect(() => {
-    if (totalInBatch > 0 && votedIds.size >= totalInBatch) {
-      const t = setTimeout(() => {
-        router.refresh();
-      }, 150);
+  const votedCountInBatch = useMemo(() => {
+    let count = 0;
+    for (const id of votedIds) {
+      if (captionIdsInBatch.has(id)) count++;
+    }
+    return count;
+  }, [votedIds, captionIdsInBatch]);
 
+  // When votes cover the current batch, refresh safely.
+  useEffect(() => {
+    if (totalInBatch > 0 && votedCountInBatch >= totalInBatch) {
+      const t = setTimeout(() => router.refresh(), 150);
       return () => clearTimeout(t);
     }
-  }, [votedIds, totalInBatch, router]);
+  }, [votedCountInBatch, totalInBatch, router]);
 
   //when a vote is made
   const handleVoted = (captionId: string) => {
@@ -60,7 +65,7 @@ export default function CaptionBatchClient({ captions }: { captions: CaptionRow[
       }}
     >
       {captions.map((row) => {
-        const rel = row.image as any;
+        const rel = row.image;
         const url = Array.isArray(rel) ? rel[0]?.url : rel?.url;
         if (!url) return null;
 
