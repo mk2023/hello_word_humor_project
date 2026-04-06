@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
 
-  const response = NextResponse.redirect(`${url.origin}/protected`);
+  const response = NextResponse.redirect(`${url.origin}/onboarding`);
 
   if (!code) return response;
 
